@@ -1,19 +1,15 @@
 package test;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Selectors;
-import com.codeborne.selenide.Selenide;
+
 import data.DataHelper;
+import data.SQLHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import page.DebitCardPage;
 import page.HomePage;
 
-import java.time.Duration;
-
-import static com.codeborne.selenide.Selectors.byText;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
+import static com.codeborne.selenide.Selenide.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class DebitCardPayTest {
@@ -24,187 +20,272 @@ public class DebitCardPayTest {
 
     @BeforeEach
     public void setup() {
-        Selenide.open("http://localhost:8080");
+        homePage = open("http://localhost:8080/", HomePage.class);
     }
+
 
     // Debit Card
 
     @Test
-    public void shouldPurchaseWithApprovedCard() {                  // ввод валидных данных Approved карты
-        debitCardPage = homePage.openDebitForm();      //$(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Операция одобрена Банком.")).shouldBe(Condition.visible, Duration.ofSeconds(15));
+    public void shouldPurchaseWithApprovedCard() {                         // 1. ввод валидных данных Approved карты
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(5);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitErrorNotification();
+        var expected = DataHelper.getFirstCardStatus();
+        var actual = SQLHelper.getDebitPaymentStatus();
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldPurchaseWithDeclinedCard() {                     // ввод валидных данных Declined карты
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getSecondCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Ошибка! Банк отказал в проведении операции.")).shouldBe(Condition.visible, Duration.ofSeconds(15));
+    public void shouldPurchaseWithDeclinedCard() {                           // 2. ввод валидных данных Declined карты
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getSecondCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitErrorNotification();
+        var expected = DataHelper.getSecondCardStatus();
+        var actual = SQLHelper.getDebitPaymentStatus();
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldReturnErrorWithEmptyDebitCard() {               // отправка пустой формы
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
-        $(Selectors.withText("Поле обязательно для заполнения")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyDebitCard() {                      // 3. отправка пустой формы
+            debitCardPage = homePage.openDebitForm();
+            var cardNumber = DataHelper.getEmptyCardInfo();
+            var month = DataHelper.getEmptyMonth();
+            var year = DataHelper.getEmptyYear();
+            var owner = DataHelper.getEmptyOwner();
+            var cvc = DataHelper.getEmptyCvcCode();
+            debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+            debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithEmptyMonthDebitCard() {          // пустое поле "Месяц"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getSecondCardInfo());
-        //$("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyNumberDebitCard() {                // 4. пустое поле "Номер карты"
+            debitCardPage = homePage.openDebitForm();
+            var cardNumber = DataHelper.getEmptyCardInfo();
+            var month = DataHelper.getGenerateMonth(1);
+            var year = DataHelper.getGenerateYear(1);
+            var owner = DataHelper.getGenerateOwner("EN");
+            var cvc = DataHelper.getGenerateCvcCode(3);
+            debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+            debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithEmptyYearDebitCard() {                // пустое поле "Год"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        //$("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyMonthDebitCard() {                 // 5. пустое поле "Месяц"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getEmptyMonth();
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithEmptyOwnerDebitCard() {                // пустое поле "Владелец"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        //$$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Поле обязательно для заполнения")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyYearDebitCard() {                 // 6. пустое поле "Год"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getEmptyYear();
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithEmptyCvcDebitCard() {                  // пустое поле "CVC/CVV"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        //$("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyOwnerDebitCard() {                 // 7. пустое поле "Владелец"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getEmptyOwner();
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithRusOwnerDebitCard() {                 // ввод символов кириллицы в поле "Владелец"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("RU"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithEmptyCvcDebitCard() {                   // 8. пустое поле "CVC/CVV"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getEmptyCvcCode();
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitEmptyField();
     }
 
     @Test
-    public void shouldReturnErrorWithRusSymbolNumberDebitCard() {            // ввод символов кириллицы в поле "Номер карты"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue("тест");
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithCyrillicSymbolNumberDebitCard() {           // 9. ввод символов кириллицы в поле "Номер карты"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getGenerateInvalidCardInfo("RU");
+        debitCardPage.onlyCardField(cardNumber);
+        debitCardPage.emptyCardField();
     }
 
     @Test
-    public void shouldReturnErrorWithIncorrectSymbolNumberDebitCard() {         // ввод спец.символов в поле "Номер карты"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue("@#!;%:?*(+)@#$%^&*");
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithIncorrectSymbolNumberDebitCard() {         // 10. ввод спец.символов в поле "Номер карты"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getSpecialSimbolsCardInfo();
+        debitCardPage.onlyCardField(cardNumber);
+        debitCardPage.emptyCardField();
     }
 
     @Test
-    public void shouldReturnErrorWithLatinSymbolMonthDebitCard() {               // ввод символов латиницы в поле "Месяц"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue("ts");
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithLatinSymbolMonthDebitCard() {              // 11. ввод символов латиницы в поле "Месяц"
+        debitCardPage = homePage.openDebitForm();
+        var month = DataHelper.getGenerateInvalidMonthInfo("EN");
+        debitCardPage.onlyMonthField(month);
+        debitCardPage.emptyMonthField();
     }
 
     @Test
-    public void shouldReturnErrorWithIncorrectSymbolMonthDebitCard() {               // ввод спец.символов в поле "Месяц"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue("@#");
-        $("[placeholder='22']").setValue(DataHelper.getgenerateYear(1));
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithIncorrectSymbolMonthDebitCard() {            // 12. ввод спец.символов в поле "Месяц"
+        debitCardPage = homePage.openDebitForm();
+        var month = DataHelper.getSpecialsSymbolMonth();
+        debitCardPage.onlyMonthField(month);
+        debitCardPage.emptyMonthField();
     }
 
     @Test
-    public void shouldReturnErrorWithLatinSymbolYearDebitCard() {                   // ввод символов латиницы в поле "Год"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue("ln");
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithLatinSymbolYearDebitCard() {                // 13. ввод символов латиницы в поле "Год"
+        debitCardPage = homePage.openDebitForm();
+        var year = DataHelper.getGenerateInvalidYearInfo("EN");
+        debitCardPage.onlyYearField(year);
+        debitCardPage.emptyYearField();
     }
 
     @Test
-    public void shouldReturnErrorWithIncorrectSymbolYearDebitCard() {                   // ввод спец.символов в поле "Год"
-        $(byText("Купить")).click();
-        $(byText("Оплата по карте")).shouldBe(Condition.visible);
-        $("[placeholder='0000 0000 0000 0000']").setValue(DataHelper.getFirstCardInfo());
-        $("[placeholder='08']").setValue(DataHelper.getGenerateMonth(1));
-        $("[placeholder='22']").setValue("%$");
-        $$("[class='input__control']").get(3).setValue(DataHelper.generateOwner("EN"));
-        $("[placeholder='999']").setValue(DataHelper.generateCvcCode(3));
-        $(Selectors.byText("Продолжить")).click();
-        $(Selectors.withText("Неверный формат")).shouldBe(Condition.visible);
+    public void shouldReturnErrorWithIncorrectSymbolYearDebitCard() {            // 14. ввод спец.символов в поле "Год"
+        debitCardPage = homePage.openDebitForm();
+        var year = DataHelper.getSpecialsSymbolsYearInfo();
+        debitCardPage.onlyYearField(year);
+        debitCardPage.emptyYearField();
     }
+
+    @Test
+    public void shouldReturnErrorWithCyrillicSymbolOwnerDebitCard() {             // 15. ввод символов кириллицы в поле "Владелец"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateOwner("RU");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitWrongFormat();
+    }
+
+    @Test
+    public void shouldReturnErrorWithIncorrectSymbolOwnerDebitCard() {             // 16. ввод спецсимволов в поле "Владелец"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getSpecialsSymbolsOwner();
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitWrongFormat();
+    }
+
+    @Test
+    public void shouldReturnErrorWithDigitOwnerDebitCard() {                       // 17. ввод цифрового значения в поле "Владелец"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateNumberOwner(10);
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitWrongFormat();
+    }
+
+    @Test
+    public void shouldReturnErrorWithArabicSymbolOwnerDebitCard() {                // 18. ввод арабских символов в поле "Владелец"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(1);
+        var owner = DataHelper.getGenerateOwner("ar");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitWrongFormat();
+    }
+
+    @Test
+    public void shouldReturnErrorWithLatinSymbolCvcDebitCard() {                   // 19. ввод символов на латинице в поле "CVC/CVV"
+        debitCardPage = homePage.openDebitForm();
+        var cvc = DataHelper.getGenerateInvalidCvcCode("EN");
+        debitCardPage.onlyCVCField(cvc);
+        debitCardPage.emptyCVCField();
+    }
+
+    @Test
+    public void shouldReturnErrorWithIncorrectSymbolCvcDebitCard() {                // 20. ввод спецсимволов в поле "CVC/CVV"
+        debitCardPage = homePage.openDebitForm();
+        var cvc = DataHelper.getSpecialSymbolsCvcCode();
+        debitCardPage.onlyCVCField(cvc);
+        debitCardPage.emptyCVCField();
+    }
+
+    @Test
+    public void shouldReturnErrorWith17SymbolNumberDebitCard() {                   // 21. ввод 17 символов в поле "Номер карты"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getCardAfterLimitCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getGenerateYear(5);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitErrorNotification();
+        var expected = DataHelper.getFirstCardStatus();
+        var actual = SQLHelper.getDebitPaymentStatus();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldReturnErrorWith3SymbolMonthDebitCard() {                    // 22. ввод 3 символов в поле "Месяц"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getCardAfterLimitMonth();
+        var year = DataHelper.getGenerateYear(5);
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitErrorNotification();
+        var expected = DataHelper.getFirstCardStatus();
+        var actual = SQLHelper.getDebitPaymentStatus();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldReturnErrorWith3SymbolYearDebitCard() {                    // 23. ввод 3 символов в поле "Год"
+        debitCardPage = homePage.openDebitForm();
+        var cardNumber = DataHelper.getFirstCardInfo();
+        var month = DataHelper.getGenerateMonth(1);
+        var year = DataHelper.getCardAfterLimitYear();
+        var owner = DataHelper.getGenerateOwner("EN");
+        var cvc = DataHelper.getGenerateCvcCode(3);
+        debitCardPage.filledForm(cardNumber, month, year, owner, cvc);
+        debitCardPage.waitErrorNotification();
+        var expected = DataHelper.getFirstCardStatus();
+        var actual = SQLHelper.getDebitPaymentStatus();
+        assertEquals(expected, actual);
+    }
+
+
+
 
 }
