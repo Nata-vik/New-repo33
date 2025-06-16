@@ -42,7 +42,15 @@ public class DataHelper {
     }
 
     public static CardInfo getCardAfterLimitCardInfo() {
-        return new CardInfo( "44444444444444411");
+        return new CardInfo("44444444444444411");
+    }
+
+    public static CardInfo getCardUnderLimitCardInfo() {
+        return new CardInfo("444444444444444");
+    }
+
+    public static CardInfo getCardWithZeroCardInfo() {
+        return new CardInfo("0000000000000000");
     }
 
     public static CardInfo getSpecialSimbolsCardInfo() {
@@ -69,22 +77,20 @@ public class DataHelper {
         return new MonthInfo("");
     }
 
-    public static MonthInfo getInvalidAmountNumbersMonths(int digits) {
-        Faker faker = new Faker();
-        var month = faker.number().digits(digits);
-        return new MonthInfo(month);
-    }
-
     public static MonthInfo getEnterMonth(String enter) {
         return new MonthInfo(enter);
     }
 
     public static MonthInfo getCardAfterLimitMonth() {
-        return new MonthInfo( "123");
+        return new MonthInfo("123");
     }
 
     public static MonthInfo getSpecialsSymbolMonth() {
         return new MonthInfo("&#");
+    }
+
+    public static MonthInfo getCardWithZeroMonth() {
+        return new MonthInfo("00");
     }
 
     public static YearInfo getGenerateYear(int shift) {
@@ -106,14 +112,16 @@ public class DataHelper {
         return new YearInfo("%#");
     }
 
-    public static YearInfo getInvalidAmountNumbersYear(int digits) {
-        Faker faker = new Faker();
-        var owner = faker.number().digits(digits);
-        return new YearInfo(owner);
-    }
-
     public static YearInfo getCardAfterLimitYear() {
         return new YearInfo("278");
+    }
+
+    public static YearInfo getCardUnderLimitYear() {
+        return new YearInfo("2");
+    }
+
+    public static YearInfo getCardWithZeroYear() {
+        return new YearInfo("00");
     }
 
     public static YearInfo getGenerateInvalidYearDate(int shift) {
@@ -161,7 +169,15 @@ public class DataHelper {
         return new CvcInfo("&^%");
     }
 
-    public static CvcInfo getEnterCvc(String enter) {
+    public static CvcInfo getCvcAfterLimitCvcCode() {
+        return new CvcInfo("1234");
+    }
+
+    public static CvcInfo getCardWithZeroCvcCode() {
+        return new CvcInfo("000");
+    }
+
+    public static CvcInfo getEnterCvcCode(String enter) {
         return new CvcInfo(enter);
     }
 

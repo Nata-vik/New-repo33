@@ -6,12 +6,10 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.time.Duration;
 
 public class SQLHelper {
 
-    private SQLHelper(){
-
+    private SQLHelper() {
     }
 
     private static final String DB_URL = System.getProperty("db.url");
@@ -28,7 +26,6 @@ public class SQLHelper {
         runner.execute(connection, "DELETE FROM credit_request_entity");
         runner.execute(connection, "DELETE FROM order_entity");
         runner.execute(connection, "DELETE FROM payment_entity");
-
     }
 
     @SneakyThrows
@@ -78,4 +75,5 @@ public class SQLHelper {
         var connection = getConnection();
         return runner.query(connection, sql, new ScalarHandler<String>());
     }
+
 }

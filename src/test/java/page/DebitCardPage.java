@@ -1,11 +1,8 @@
 package page;
 
-
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
-import org.openqa.selenium.Keys;
 import data.DataHelper;
-
 
 import java.time.Duration;
 
@@ -17,9 +14,8 @@ import static com.codeborne.selenide.Selenide.$$;
 
 public class DebitCardPage {
 
-    private final SelenideElement PayCardField = $(byText("Оплата по карте"));
-    private final SelenideElement cardNumberForm = $("[placeholder='0000 0000 0000 0000]");
-    private final SelenideElement monthForm = $("[placeholder='08]");
+    private final SelenideElement cardNumberForm = $("[placeholder='0000 0000 0000 0000']");
+    private final SelenideElement monthForm = $("[placeholder='08']");
     private final SelenideElement yearForm = $("[placeholder='22']");
     private final SelenideElement ownerForm = $$("[class='input__control']").get(3);
     private final SelenideElement cvcForm = $("[placeholder='999']");
@@ -40,21 +36,12 @@ public class DebitCardPage {
         buttonForm.click();
     }
 
-    public void cleanFilledForm() {
-        cardNumberForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        monthForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        yearForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        ownerForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        cvcForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-    }
-
-
     public void waitSuccessfulNotification() {
-        successfulNotification.should(visible, Duration.ofSeconds(10));
+        successfulNotification.should(visible, Duration.ofSeconds(15));
     }
 
     public void waitErrorNotification() {
-        errorNotification.should(visible, Duration.ofSeconds(10));
+        errorNotification.should(visible, Duration.ofSeconds(15));
     }
 
     public void waitEmptyField() {
