@@ -66,28 +66,24 @@ docker-compose up
 ```
 3. Запустить SUT.
 
-для MySQL:
-В консоли ввести команду: 
+для MySQL в консоли ввести команду: 
 ```
 java -jar .\artifacts\aqa-shop.jar --spring.datasource.url=jdbc:mysql://localhost:3306/db
 ```
 
-для PostgreSQL:
-В консоли ввести команду: 
+для PostgreSQL в консоли ввести команду: 
 ```
 java -jar .\artifacts\aqa-shop.jar
 ```
 
 4. Запустить тесты командой в консоли:
 
-для MySQL:
-В консоли ввести команду: 
+для MySQL в консоли ввести команду: 
 ```
 ./gradlew clean test -Ddb=jdbc:mysql://localhost:3306/db
 ```
 
-для PostgreSQL:
-В консоли ввести команду: 
+для PostgreSQL в консоли ввести команду: 
 ```
 ./gradlew clean test
 ```
