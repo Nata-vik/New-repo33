@@ -2,7 +2,6 @@ package page;
 
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
-import org.openqa.selenium.Keys;
 import data.DataHelper;
 
 import java.time.Duration;
@@ -36,14 +35,6 @@ public class CreditCardPage {
         ownerForm.setValue(ownerInfo.getOwner());
         cvcForm.setValue(cvcInfo.getCvc());
         buttonForm.click();
-    }
-
-    public void cleanFilledForm() {
-        cardNumberForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        monthForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        yearForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        ownerForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
-        cvcForm.doubleClick().sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
     }
 
     public void waitSuccessfulNotification() {
